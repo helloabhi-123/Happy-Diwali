@@ -934,6 +934,7 @@
 
       @media (prefers-reduced-motion: reduce) {
         html { scroll-behavior: auto; }
+        .confetti-stage { display: none; }
         .fairy-bulb { animation: none; opacity: 0.85; }
         .spark { animation: none; opacity: 0.9; }
         .greeting-title { animation: none; filter: drop-shadow(0 0 16px rgba(255, 178, 84, 0.55)); }
@@ -947,4 +948,19 @@
         .catalog-night, .catalog-stars, .catalog-stars::after, .catalog-shimmer, .catalog-glow, .catalog-media img { animation: none; }
         .catalog-glow, .catalog-media img { transition: none; }
         .shop-btn, .card, .color-btn, .swatch { transition: none; }
+      }
+
+      /* ---------- Celebration Confetti Stage ---------- */
+      .confetti-stage {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        overflow: hidden;
+        z-index: 95;
+      }
+      .confetti-burst {
+        position: absolute;
+        pointer-events: none;
       }

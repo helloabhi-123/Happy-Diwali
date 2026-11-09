@@ -557,3 +557,189 @@
         btn.addEventListener("focus", refreshLink);
         btn.addEventListener("click", refreshLink);
       })();
+
+      /* ---------- Continuous Celebration Confetti ---------- */
+      (function () {
+        "use strict";
+
+        if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          return;
+        }
+
+        var colors = ["#26ccff", "#a25afd", "#ff5e7e", "#88ff5a", "#fcff42", "#ffa62d", "#ff36ff"];
+        var shapes = ["circle", "rect", "rect", "strip", "strip"];
+        var keyframeCount = 40;
+        var popWindow = 0.08;
+
+        function buildKeyframes(opts) {
+          var angle = opts.angle;
+          var velocity = opts.startVelocity;
+          var decay = opts.decay;
+          var gravity = opts.gravity;
+          var drift = opts.drift;
+          var wobbleSpeed = opts.wobbleSpeed;
+          var wobbleOffset = opts.wobbleOffset;
+          var size = opts.size;
+          var ticks = opts.ticks;
+          var tiltRotations = opts.tiltRotations;
+          var rotation = opts.rotation;
+
+          var transforms = [];
+          var opacities = [];
+          var x = 0;
+          var y = 0;
+          var wobble = wobbleOffset;
+          var tick = 0;
+
+          for (var i = 0; i <= keyframeCount; i++) {
+            var t = i / keyframeCount;
+            if (i > 0) {
+              var targetTick = Math.round((i * ticks) / keyframeCount);
+              while (tick < targetTick) {
+                x += Math.cos(angle) * velocity + drift;
+                y += Math.sin(angle) * velocity + gravity * 3;
+                velocity *= decay;
+                wobble += wobbleSpeed;
+                tick++;
+              }
+            }
+            var translateX = i === 0 ? 0 : x + Math.cos(wobble) * 15 * size;
+            var translateY = y;
+            var scale = 1;
+            if (t < popWindow * 0.6) {
+              scale = (t / (popWindow * 0.6)) * 1.15;
+            } else if (t < popWindow) {
+              scale = 1.15 - ((t - popWindow * 0.6) / (popWindow * 0.4)) * 0.15;
+            } else {
+              scale = 1;
+            }
+            var tilt = tiltRotations * 360 * t;
+            var opacity = 1;
+            if (t <= 0.5) {
+              opacity = 1;
+            } else if (t <= 0.8) {
+              opacity = 1 - ((t - 0.5) / 0.3) * 0.5;
+            } else {
+              opacity = 0.5 - ((t - 0.8) / 0.2) * 0.5;
+            }
+            transforms.push(
+              "translate(" + translateX.toFixed(1) + "px, " + translateY.toFixed(1) + "px) scale(" + scale.toFixed(3) + ") rotateY(" + tilt.toFixed(1) + "deg) rotate(" + rotation.toFixed(1) + "deg)"
+            );
+            opacities.push(Math.max(0, Math.min(1, opacity)));
+          }
+
+          return { transform: transforms, opacity: opacities };
+        }
+
+        var stage = document.createElement("div");
+        stage.className = "confetti-stage";
+        stage.setAttribute("aria-hidden", "true");
+        document.body.appendChild(stage);
+
+        function fire(originX, originY, baseAngle, particleCount) {
+          if (!document.body.contains(stage)) return;
+          var count = particleCount || 48;
+          var startVelocity = 28 + Math.random() * 8;
+          var spread = 85;
+          var decay = 0.92;
+          var gravity = 0.95;
+          var drift = (Math.random() - 0.5) * 0.8;
+          var duration = 2.6 + Math.random() * 0.6;
+          var sizeMultiplier = 1;
+          var ticks = Math.round(duration * 60);
+
+          var burst = document.createElement("div");
+          burst.className = "confetti-burst";
+          burst.style.left = originX + "px";
+          burst.style.top = originY + "px";
+          stage.appendChild(burst);
+
+          var spreadRad = spread * (Math.PI / 180);
+          var centerAngle = baseAngle !== undefined ? baseAngle : -Math.PI / 2;
+
+          for (var p = 0; p < count; p++) {
+            var angle = centerAngle + (0.5 * spreadRad - Math.random() * spreadRad);
+            var velocity = startVelocity * 0.5 + Math.random() * startVelocity;
+            var kf = buildKeyframes({
+              angle: angle,
+              startVelocity: velocity,
+              decay: decay,
+              gravity: gravity,
+              drift: drift,
+              wobbleSpeed: Math.min(0.11, Math.random() * 0.1 + 0.05),
+              wobbleOffset: Math.random() * 10,
+              size: sizeMultiplier,
+              ticks: ticks,
+              tiltRotations: 2 + Math.random() * 4,
+              rotation: Math.random() * 360
+            });
+            var pSize = 6 * sizeMultiplier + Math.random() * 6 * sizeMultiplier;
+            var shape = shapes[Math.floor(Math.random() * shapes.length)];
+            var color = colors[Math.floor(Math.random() * colors.length)];
+
+            var width = shape === "strip" ? pSize * 0.35 : shape === "rect" ? pSize * 0.75 : pSize;
+            var height = shape === "strip" ? pSize * 2.2 : pSize;
+            var radius = shape === "circle" ? "50%" : shape === "strip" ? (pSize * 0.12) + "px" : "2px";
+
+            var dot = document.createElement("div");
+            dot.style.position = "absolute";
+            dot.style.width = width.toFixed(1) + "px";
+            dot.style.height = height.toFixed(1) + "px";
+            dot.style.borderRadius = radius;
+            dot.style.backgroundColor = color;
+            dot.style.willChange = "transform, opacity";
+            dot.style.pointerEvents = "none";
+            burst.appendChild(dot);
+
+            var frames = [];
+            for (var f = 0; f < kf.transform.length; f++) {
+              frames.push({
+                transform: kf.transform[f],
+                opacity: kf.opacity[f]
+              });
+            }
+
+            if (dot.animate) {
+              dot.animate(frames, {
+                duration: duration * 1000,
+                easing: "linear",
+                fill: "forwards"
+              });
+            }
+          }
+
+          setTimeout(function () {
+            if (burst.parentNode) burst.parentNode.removeChild(burst);
+          }, (duration + 0.5) * 1000);
+        }
+
+        var step = 0;
+        function loopConfetti() {
+          var w = window.innerWidth;
+          var h = window.innerHeight;
+
+          if (step % 2 === 0) {
+            fire(w * 0.06, h + 10, -Math.PI / 2.35, 42);
+          } else {
+            fire(w * 0.94, h + 10, -Math.PI / 1.75, 42);
+          }
+
+          if (step % 3 === 0) {
+            setTimeout(function () {
+              fire(w * (0.32 + Math.random() * 0.36), h * 0.88, -Math.PI / 2, 36);
+            }, 700);
+          }
+
+          step++;
+        }
+
+        setTimeout(function () {
+          var w = window.innerWidth;
+          var h = window.innerHeight;
+          fire(w * 0.12, h + 10, -Math.PI / 2.3, 46);
+          fire(w * 0.88, h + 10, -Math.PI / 1.7, 46);
+          fire(w * 0.5, h * 0.72, -Math.PI / 2, 42);
+        }, 500);
+
+        setInterval(loopConfetti, 2500);
+      })();
