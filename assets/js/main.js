@@ -636,15 +636,15 @@
         stage.setAttribute("aria-hidden", "true");
         document.body.appendChild(stage);
 
-        function fire(originX, originY, baseAngle, particleCount) {
+        function fire(originX, originY, baseAngle) {
           if (!document.body.contains(stage)) return;
-          var count = particleCount || 48;
+          var count = 60; // 60 particles per burst as specified
           var startVelocity = 28 + Math.random() * 8;
           var spread = 85;
-          var decay = 0.92;
-          var gravity = 0.95;
+          var decay = 0.91;
+          var gravity = 1;
           var drift = (Math.random() - 0.5) * 0.8;
-          var duration = 2.6 + Math.random() * 0.6;
+          var duration = 2.5; // fade-out over 2.5 seconds
           var sizeMultiplier = 1;
           var ticks = Math.round(duration * 60);
 
@@ -677,8 +677,8 @@
             var shape = shapes[Math.floor(Math.random() * shapes.length)];
             var color = colors[Math.floor(Math.random() * colors.length)];
 
-            var width = shape === "strip" ? pSize * 0.35 : shape === "rect" ? pSize * 0.75 : pSize;
-            var height = shape === "strip" ? pSize * 2.2 : pSize;
+            var width = shape === "strip" ? pSize * 0.3 : shape === "rect" ? pSize * 0.7 : pSize;
+            var height = shape === "strip" ? pSize * 2 : pSize;
             var radius = shape === "circle" ? "50%" : shape === "strip" ? (pSize * 0.12) + "px" : "2px";
 
             var dot = document.createElement("div");
@@ -713,33 +713,34 @@
           }, (duration + 0.5) * 1000);
         }
 
-        var step = 0;
+        // Loop continuously every ~1.1s across different spots across the whole viewport
+        var burstIdx = 0;
         function loopConfetti() {
           var w = window.innerWidth;
           var h = window.innerHeight;
 
-          if (step % 2 === 0) {
-            fire(w * 0.06, h + 10, -Math.PI / 2.35, 42);
-          } else {
-            fire(w * 0.94, h + 10, -Math.PI / 1.75, 42);
-          }
+          var spots = [
+            { x: w * 0.12, y: h + 10, angle: -Math.PI / 2.3 },
+            { x: w * 0.88, y: h + 10, angle: -Math.PI / 1.7 },
+            { x: w * 0.5, y: h * 0.85, angle: -Math.PI / 2 },
+            { x: w * 0.28, y: h + 10, angle: -Math.PI / 2.15 },
+            { x: w * 0.72, y: h + 10, angle: -Math.PI / 1.85 }
+          ];
 
-          if (step % 3 === 0) {
-            setTimeout(function () {
-              fire(w * (0.32 + Math.random() * 0.36), h * 0.88, -Math.PI / 2, 36);
-            }, 700);
-          }
-
-          step++;
+          var spot = spots[burstIdx % spots.length];
+          fire(spot.x, spot.y, spot.angle);
+          burstIdx++;
         }
 
+        // Initial celebration bursts immediately when page opens
         setTimeout(function () {
           var w = window.innerWidth;
           var h = window.innerHeight;
-          fire(w * 0.12, h + 10, -Math.PI / 2.3, 46);
-          fire(w * 0.88, h + 10, -Math.PI / 1.7, 46);
-          fire(w * 0.5, h * 0.72, -Math.PI / 2, 42);
-        }, 500);
+          fire(w * 0.15, h + 10, -Math.PI / 2.3);
+          fire(w * 0.85, h + 10, -Math.PI / 1.7);
+          fire(w * 0.5, h * 0.8, -Math.PI / 2);
+        }, 300);
 
-        setInterval(loopConfetti, 2500);
+        // Fires a fresh burst every ~1.1s continuously
+        setInterval(loopConfetti, 1100);
       })();
